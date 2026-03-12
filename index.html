@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ys✨隐身接口😔生成工具</title>
+    <title>接口说明</title>
     <style>
         * {
             margin: 0;
@@ -12,244 +12,46 @@
             font-family: system-ui, -apple-system, sans-serif;
         }
         body {
-            background: #f0f0f0;
-            padding: 15px;
-            line-height: 1.6;
-        }
-        .header {
-            font-size: 28px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        .sub-title {
-            color: #333;
-            margin-bottom: 15px;
-        }
-        .mode {
-            margin: 10px 0;
-        }
-        .mode label {
-            margin-right: 15px;
-        }
-        textarea, #fileInput {
-            width: 100%;
-            height: 200px;
-            padding: 10px;
-            border: 1px solid #999;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            resize: vertical;
-        }
-        #fileInput {
-            height: auto;
-            padding: 12px;
-            background: #fff;
-            display: none;
-        }
-        .row {
-            margin: 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        input[type="text"], input[type="file"] {
-            padding: 6px 8px;
-            border: 1px solid #999;
-            border-radius: 4px;
-            flex: 1;
-            min-width: 120px;
-        }
-        button {
-            padding: 6px 12px;
-            background: #000;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .link-box {
-            margin: 15px 0;
-            padding: 8px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            word-break: break-all;
-            min-height: 40px;
-        }
-        .tip {
-            font-size: 13px;
-            color: #555;
-            margin: 8px 0;
-        }
-        .tabs {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        .tabs a {
-            color: #0066cc;
-            text-decoration: underline;
-        }
-        .desc {
-            display: none;
+            background: #ffffff;
+            color: #000000;
             padding: 20px;
-            background: #fff;
+            line-height: 1.8;
         }
     </style>
 </head>
 <body>
-    <!-- 网页端工具界面 -->
-    <div id="tool">
-        <div class="header">🦍接口隐身</div>
-        <div class="sub-title">🐻直播源和点播源都可以一键隐身！</div>
-
-        <div class="mode">
-            <label>
-                <input type="radio" name="mode" value="text" checked onclick="switchMode()"> 文本模式
-            </label>
-            <label>
-                <input type="radio" name="mode" value="file" onclick="switchMode()"> 上传文件
-            </label>
-        </div>
-
-        <textarea id="source" placeholder="粘贴你的直播/点播源内容"></textarea>
-        <div id="fileInput">
-            <input type="file" id="file" accept=".txt,.m3u8">
-            <div id="fileContent" style="margin-top:8px; font-size:13px; color:#333;"></div>
-        </div>
-
-        <div class="row">
-            <span>密码:</span>
-            <input type="text" id="pwd" placeholder="设置接口密码">
-            <span style="color: red;">请牢记!!</span>
-        </div>
-
-        <div class="row">
-            <span>文件名:</span>
-            <input type="text" id="fname" placeholder="设置文件名">
-            <button onclick="read()">读取</button>
-            <button onclick="genLink()">转为链接</button>
-        </div>
-
-        <div class="tip">
-            可在线编辑文件，原链接不变，需输入原密码。
-        </div>
-
-        <div>链接:</div>
-        <div class="link-box" id="link"></div>
-
-        <div class="tabs">
-            <a href="#">「接口工具」</a>
-            <a href="#">「直播成图」</a>
-            <a href="#">「转换M3U」</a>
-            <span>🐷</span>
-        </div>
-    </div>
-
-    <!-- 影视软件访问时的说明界面 -->
-    <div id="desc" class="desc">
+    <div id="desc">
         ✅ 将本网页地址放进软件接口里就可以了。<br>
         ✅ 点播源放点播接口，直播源放直播接口。<br>
         © <span id="myurl"></span>
     </div>
 
     <script>
-        // ========== 模式切换 ==========
-        function switchMode() {
-            const mode = document.querySelector('input[name="mode"]:checked').value;
-            const textarea = document.getElementById("source");
-            const fileInput = document.getElementById("fileInput");
-            if (mode === "text") {
-                textarea.style.display = "block";
-                fileInput.style.display = "none";
-            } else {
-                textarea.style.display = "none";
-                fileInput.style.display = "block";
-            }
-        }
-
-        // ========== 读取上传文件内容 ==========
-        document.getElementById("file").addEventListener("change", function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                document.getElementById("fileContent").innerText = evt.target.result;
-            };
-            reader.readAsText(file);
-        });
-
-        // ========== 核心接口逻辑 ==========
-        const ua = navigator.userAgent.toLowerCase();
-        const isMediaApp = ua.includes("tvbox") || ua.includes("影视仓") || ua.includes("box");
-        const params = new URLSearchParams(window.location.search);
-        const pwd = params.get("pwd");
-        const fname = params.get("fname");
+        // ========== 配置区（你只需要改这里） ==========
+        const VOD_SOURCE = "https://你的点播源地址.m3u8"; // 替换成你的点播源
+        const LIVE_SOURCE = "https://你的直播源地址.m3u8"; // 替换成你的直播源
+        // ==============================================
 
         // 自动显示当前页面地址
-        document.getElementById("myurl").innerText = window.location.href.split("?")[0];
+        document.getElementById("myurl").innerText = window.location.href;
 
-        // 影视软件访问 + 密码正确 → 返回源内容
-        if (isMediaApp && pwd && fname) {
-            const saved = localStorage.getItem(fname);
-            if (saved && saved.startsWith(pwd + "|")) {
-                document.body.innerHTML = saved.split("|")[1];
-            } else {
-                document.body.innerHTML = "密码或文件名错误";
-            }
-        } 
-        // 普通访问：显示工具或说明
+        // 识别是否为影视软件（TVBox/影视仓等）
+        const ua = navigator.userAgent.toLowerCase();
+        const isMediaApp = ua.includes("tvbox") || 
+                           ua.includes("影视仓") || 
+                           ua.includes("box") ||
+                           ua.includes("catvod") ||
+                           ua.includes("fongmi");
+
+        // 如果是影视软件访问 → 返回源内容
+        if (isMediaApp) {
+            // 这里可以根据请求类型返回点播/直播源，简化版直接返回点播源
+            document.body.innerHTML = VOD_SOURCE;
+            // 如果要做直播源，把上面一行改成：document.body.innerHTML = LIVE_SOURCE;
+        }
+        // 否则（浏览器打开）→ 只显示说明文字
         else {
-            if (isMediaApp) {
-                document.getElementById("tool").style.display = "none";
-                document.getElementById("desc").style.display = "block";
-            } else {
-                document.getElementById("tool").style.display = "block";
-                document.getElementById("desc").style.display = "none";
-            }
-        }
-
-        // ========== 生成链接 ==========
-        function getSourceContent() {
-            const mode = document.querySelector('input[name="mode"]:checked').value;
-            if (mode === "text") {
-                return document.getElementById("source").value;
-            } else {
-                return document.getElementById("fileContent").innerText;
-            }
-        }
-
-        function genLink() {
-            const source = getSourceContent();
-            const pwd = document.getElementById("pwd").value;
-            const fname = document.getElementById("fname").value;
-            if (!pwd || !fname || !source) {
-                alert("请填写密码、文件名和源内容！");
-                return;
-            }
-            localStorage.setItem(fname, pwd + "|" + source);
-            const link = `${window.location.href.split("?")[0]}?pwd=${pwd}&fname=${fname}`;
-            document.getElementById("link").innerText = link;
-        }
-
-        // ========== 读取已有文件（编辑用） ==========
-        function read() {
-            const pwd = document.getElementById("pwd").value;
-            const fname = document.getElementById("fname").value;
-            const saved = localStorage.getItem(fname);
-            if (saved && saved.startsWith(pwd + "|")) {
-                const content = saved.split("|")[1];
-                const mode = document.querySelector('input[name="mode"]:checked').value;
-                if (mode === "text") {
-                    document.getElementById("source").value = content;
-                } else {
-                    document.getElementById("fileContent").innerText = content;
-                }
-            } else {
-                alert("密码或文件名错误，或文件不存在！");
-            }
+            document.getElementById("desc").style.display = "block";
         }
     </script>
 </body>
