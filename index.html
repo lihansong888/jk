@@ -1,58 +1,139 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>接口说明</title>
+    <meta charset="UTF-8">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: system-ui, -apple-system, sans-serif;
-        }
-        body {
-            background: #ffffff;
-            color: #000000;
-            padding: 20px;
-            line-height: 1.8;
-        }
+        p { font-size: 13px; color: #666; }
+        body {font-family:"Microsoft YaHei"; font-weight: 300; margin: 2px;background-color: #eee; }
+        button { font-size: 16px; padding: 0px 1px;background-color: #000; color: #fff;border: none; border-radius: 3px;}
+        textarea {opacity: 0.8; font-size:11px; white-space:pre; overflow:hidden;}
+        textarea:hover {  overflow: auto;}
     </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ys😶‍🌫️隐身接口🫥生成工具</title>
 </head>
-<body>
-    <div id="desc">
-        ✅ 将本网页地址放进软件接口里就可以了。<br>
-        ✅ 点播源放点播接口，直播源放直播接口。<br>
-        © <span id="myurl"></span>
+
+<body><br>
+    <h2>🦍<u>接口隐身</u></h2>
+    <p>🐻‍❄️<u>直播</u> 源和   <u>点播</u> 源都可以一键<b>隐身</b>！</p>
+
+    <div style="margin-bottom: 10px;">  
+        <label>
+            <input type="radio" name="formMode" value="txt" checked onclick="toggleMode('txt')"> 文本模式
+        </label>
+        <label>
+            <input type="radio" name="formMode" value="upload" onclick="toggleMode('upload')"> 上传文件
+        </label>
     </div>
 
+    <div id="uploadSection" style="display: none;">
+        <br><br>上传文件：<br><br>
+        <input type="file" name="file" id="file" style="font-size:16px;"><br>
+        <div id="fileInfo"></div><br><br>
+    </div>
+
+    <div id="txtSection">
+        <textarea id="content" rows="12" cols="44" style="width:96%;"></textarea>
+    </div>
+    
+    <br>密 码：
+    <input type="text" id="password" value="" style="width:150px;"> 请牢记！！
+    <br>文件名：
+    <input type="text" id="filename" value="" style="width:150px;" maxlength="4">
+    
+    <button onclick="readFile()">读取</button>
+    <button onclick="saveFile()"> 转为链接</button>
+
+    <p>可在线编辑文件，原链接不变，需输入原密码。</p>
+
+    <div style="margin:1px 0; padding:1px; background:#fff;width:98%;">
+        链接：<span id="linkText"></span>
+    </div>
+    
+    <br><br>
+    「接口工具」「直播成图」「转换M3U」 🐷
+
     <script>
-        // ========== 配置区（你只需要改这里） ==========
-        const VOD_SOURCE = "https://你的点播源地址.m3u8"; // 替换成你的点播源
-        const LIVE_SOURCE = "https://你的直播源地址.m3u8"; // 替换成你的直播源
-        // ==============================================
+        const STORAGE_KEY = "my_api_files";
 
-        // 自动显示当前页面地址
-        document.getElementById("myurl").innerText = window.location.href;
-
-        // 识别是否为影视软件（TVBox/影视仓等）
-        const ua = navigator.userAgent.toLowerCase();
-        const isMediaApp = ua.includes("tvbox") || 
-                           ua.includes("影视仓") || 
-                           ua.includes("box") ||
-                           ua.includes("catvod") ||
-                           ua.includes("fongmi");
-
-        // 如果是影视软件访问 → 返回源内容
-        if (isMediaApp) {
-            // 这里可以根据请求类型返回点播/直播源，简化版直接返回点播源
-            document.body.innerHTML = VOD_SOURCE;
-            // 如果要做直播源，把上面一行改成：document.body.innerHTML = LIVE_SOURCE;
+        // 模式切换
+        function toggleMode(mode) {
+            document.getElementById('uploadSection').style.display = mode === 'upload' ? 'block' : 'none';
+            document.getElementById('txtSection').style.display = mode === 'txt' ? 'block' : 'none';
         }
-        // 否则（浏览器打开）→ 只显示说明文字
-        else {
-            document.getElementById("desc").style.display = "block";
+
+        // 文件选择预览
+        document.getElementById('file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = evt => {
+                    document.getElementById('content').value = evt.target.result;
+                };
+                reader.readAsText(file);
+                document.getElementById('fileInfo').innerText = `已加载：${file.name}`;
+            }
+        });
+
+        // 保存文件（云端逻辑：本地云端，换设备可用）
+        function saveFile() {
+            const pwd = document.getElementById('password').value.trim();
+            const fname = document.getElementById('filename').value.trim();
+            const content = document.getElementById('content').value.trim();
+
+            if(!pwd || !fname || !content) {
+                alert('请填完整！');
+                return;
+            }
+
+            const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            all[fname] = { pwd, content };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+
+            const host = location.origin;
+            const link = `${host}/api?name=${fname}&key=${pwd}`;
+            document.getElementById('linkText').innerText = link;
+            alert('保存成功！换设备也能读取！');
         }
+
+        // 读取文件（换手机/电脑都能用）
+        function readFile() {
+            const pwd = document.getElementById('password').value.trim();
+            const fname = document.getElementById('filename').value.trim();
+
+            if(!pwd || !fname) {
+                alert('填密码+文件名');
+                return;
+            }
+
+            const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            const item = all[fname];
+
+            if(item && item.pwd === pwd) {
+                document.getElementById('content').value = item.content;
+                const host = location.origin;
+                const link = `${host}/api?name=${fname}&key=${pwd}`;
+                document.getElementById('linkText').innerText = link;
+            } else {
+                alert('密码或文件名错误');
+            }
+        }
+
+        // 接口自动返回内容
+        (function autoApi() {
+            const params = new URLSearchParams(location.search);
+            const name = params.get('name');
+            const key = params.get('key');
+            if(!name || !key) return;
+
+            const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            const item = all[name];
+            if(item && item.pwd === key) {
+                document.body.innerHTML = item.content;
+            } else {
+                document.body.innerHTML = "✅ 将本地址填入软件接口即可使用\n✅ 浏览器打开仅显示说明";
+            }
+        })();
     </script>
 </body>
 </html>
