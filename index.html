@@ -12,7 +12,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ys😶‍🌫️隐身接口🫥生成工具</title>
 </head>
-
 <body><br>
     <h2>🦍<u>接口隐身</u></h2>
     <p>🐻‍❄️<u>直播</u> 源和   <u>点播</u> 源都可以一键<b>隐身</b>！</p>
@@ -40,6 +39,8 @@
     <input type="text" id="password" value="" style="width:150px;"> 请牢记！！
     <br>文件名：
     <input type="text" id="filename" value="" style="width:150px;" maxlength="4">
+    <br>接口标识：
+    <input type="text" id="token" value="" style="width:150px;" placeholder="自定义一个无意义标识（如abc123）">
     
     <button onclick="readFile()">读取</button>
     <button onclick="saveFile()"> 转为链接</button>
@@ -49,20 +50,16 @@
     <div style="margin:1px 0; padding:1px; background:#fff;width:98%;">
         链接：<span id="linkText"></span>
     </div>
-    
-    <br><br>
-    「接口工具」「直播成图」「转换M3U」 🐷
 
     <script>
         const STORAGE_KEY = "my_api_files";
+        const TOKEN_MAP_KEY = "my_api_token_map";
 
-        // 模式切换
         function toggleMode(mode) {
             document.getElementById('uploadSection').style.display = mode === 'upload' ? 'block' : 'none';
             document.getElementById('txtSection').style.display = mode === 'txt' ? 'block' : 'none';
         }
 
-        // 文件选择预览
         document.getElementById('file').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if(file) {
@@ -75,63 +72,67 @@
             }
         });
 
-        // 保存文件（云端逻辑：本地云端，换设备可用）
         function saveFile() {
             const pwd = document.getElementById('password').value.trim();
             const fname = document.getElementById('filename').value.trim();
+            const token = document.getElementById('token').value.trim();
             const content = document.getElementById('content').value.trim();
 
-            if(!pwd || !fname || !content) {
+            if(!pwd || !fname || !token || !content) {
                 alert('请填完整！');
                 return;
             }
 
-            const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            all[fname] = { pwd, content };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+            // 保存文件内容
+            const allFiles = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            allFiles[fname] = { pwd, content };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(allFiles));
+
+            // 保存 token → 文件名 映射
+            const allTokens = JSON.parse(localStorage.getItem(TOKEN_MAP_KEY) || '{}');
+            allTokens[token] = fname;
+            localStorage.setItem(TOKEN_MAP_KEY, JSON.stringify(allTokens));
 
             const host = location.origin;
-            const link = `${host}/api?name=${fname}&key=${pwd}`;
+            const link = `${host}?token=${token}`;
             document.getElementById('linkText').innerText = link;
-            alert('保存成功！换设备也能读取！');
+            alert('保存成功！链接已隐藏敏感信息！');
         }
 
-        // 读取文件（换手机/电脑都能用）
         function readFile() {
             const pwd = document.getElementById('password').value.trim();
             const fname = document.getElementById('filename').value.trim();
+            if(!pwd || !fname) { alert('填密码+文件名'); return; }
 
-            if(!pwd || !fname) {
-                alert('填密码+文件名');
-                return;
-            }
-
-            const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            const item = all[fname];
-
+            const allFiles = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            const item = allFiles[fname];
             if(item && item.pwd === pwd) {
                 document.getElementById('content').value = item.content;
-                const host = location.origin;
-                const link = `${host}/api?name=${fname}&key=${pwd}`;
-                document.getElementById('linkText').innerText = link;
+                alert('读取成功！');
             } else {
                 alert('密码或文件名错误');
             }
         }
 
-        // 接口自动返回内容
+        // 接口解析：通过 token 找到文件
         (function autoApi() {
             const params = new URLSearchParams(location.search);
-            const name = params.get('name');
-            const key = params.get('key');
-            if(!name || !key) return;
+            const token = params.get('token');
+            if(!token) return;
 
-            const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            const item = all[name];
-            if(item && item.pwd === key) {
+            const allTokens = JSON.parse(localStorage.getItem(TOKEN_MAP_KEY) || '{}');
+            const fname = allTokens[token];
+            if(!fname) {
+                document.body.innerHTML = "✅ 接口已隐身，浏览器打开仅显示说明";
+                return;
+            }
+
+            const allFiles = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            const item = allFiles[fname];
+            if(item) {
                 document.body.innerHTML = item.content;
             } else {
-                document.body.innerHTML = "✅ 将本地址填入软件接口即可使用\n✅ 浏览器打开仅显示说明";
+                document.body.innerHTML = "✅ 接口已隐身，浏览器打开仅显示说明";
             }
         })();
     </script>
