@@ -5,98 +5,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>在线😶‍🌫️隐身接口🫥生成工具</title>
     <style>
-        p { font-size: 13px; color: #666; }
-        body {font-family:"Microsoft YaHei"; font-weight: 300; margin: 2px;background-color: #eee; }
-        button { font-size: 16px; padding: 4px 10px; background-color: #000; color: #fff; border: none; border-radius: 3px; cursor: pointer; margin-top: 5px;}
-        .btn-read { background-color: #555; } /* 读取按钮颜色稍浅 */
-        textarea { opacity: 0.8; font-size:11px; width: 96%; height: 200px; border: 1px solid #ccc; display: block; margin-bottom: 5px;}
-        input { border: 1px solid #ccc; padding: 4px; width: 160px; margin-bottom: 5px;}
-        #linkArea { margin: 10px 0; padding: 10px; background: #fff; width: 94%; min-height: 40px; word-break: break-all; border: 1px dashed #000; }
-        a { color: blue; text-decoration: none; }
+        p { font-size: 12px; color: #666; margin: 5px 0; }
+        body {font-family:"Microsoft YaHei"; font-weight: 300; margin: 5px; background-color: #eee; }
+        button { font-size: 16px; padding: 5px 10px; background-color: #000; color: #fff; border: none; border-radius: 3px; cursor: pointer;}
+        textarea { opacity: 0.8; font-size:12px; width: 96%; height: 220px; border: 1px solid #ccc; display: block; margin-bottom: 8px;}
+        input { border: 1px solid #ccc; padding: 5px; width: 180px; margin-bottom: 5px;}
+        #linkArea { margin: 10px 0; padding: 10px; background: #fff; width: 93%; min-height: 40px; word-break: break-all; border: 1px dashed #000; font-size: 13px; }
+        .row { margin-bottom: 10px; }
     </style>
 </head>
 <body><br>
     <h2>🦍<u>接口隐身</u></h2>
-    <p>🐻‍❄️<u>直播</u> 源和 <u>点播</u> 源都可以一键<b>隐身</b>！</p>
+    <p>🐻‍❄️输入 <b>用户名/Token/文件名</b>，可找回或覆盖旧文件。</p>
 
     <textarea id="content" placeholder="在此粘贴你的接口内容..."></textarea>
     
-    <div>
-        密 码 (Token)：<br>
-        <input type="password" id="ghToken" placeholder="GitHub Token">
+    <div class="row">
+        GitHub 用户名：<br>
+        <input type="text" id="ghUser" placeholder="比如: lihansong888">
     </div>
-    <div>
+    <div class="row">
+        密 码 (Token)：<br>
+        <input type="password" id="ghToken" placeholder="输入你的 ghp_ 开头密钥">
+    </div>
+    <div class="row">
         文件名：<br>
         <input type="text" id="filename" placeholder="比如: CR">
-        <button type="button" class="btn-read" onclick="readFromCloud()">读取内容</button>
+        <button type="button" style="background:#555; font-size:14px;" onclick="readFromCloud()">读取内容</button>
     </div>
     
-    <button type="button" onclick="saveToCloud()" style="font-size:18px; width: 98%;"> 转为链接并保存</button>
+    <button type="button" onclick="saveToCloud()" style="font-size:18px; width: 98%; height: 45px; margin-top: 5px;"> 转为链接并保存</button>
 
     <div id="linkArea">
-        <strong>生成的链接（直连加速）：</strong><br>
-        <a id="finalLink" href="" target="_blank"></a>
+        <strong>生成的加速链接：</strong><br>
+        <a id="finalLink" href="" target="_blank" style="color: blue; text-decoration: none;"></a>
     </div>
-    
-    <p>💡 提示：输入文件名和Token点“读取”可找回之前的内容。</p>
 
     <script>
-        const repo = "lihansong888/jk";
-
-        // --- 功能 1：读取/找回已有文件 ---
+        // --- 功能 1：读取已有内容 ---
         async function readFromCloud() {
+            const user = document.getElementById('ghUser').value.trim();
             const token = document.getElementById('ghToken').value.trim();
             const id = document.getElementById('filename').value.trim();
-            if(!token || !id) return alert('请先填入 Token 和 文件名！');
+            
+            if(!user || !token || !id) return alert('用户名、Token、文件名缺一不可！');
 
-            const apiUrl = `https://api.github.com/repos/${repo}/contents/data/${id}.txt`;
+            const apiUrl = `https://api.github.com/repos/${user}/jk/contents/data/${id}.txt`;
             
             try {
                 const res = await fetch(apiUrl, {
-                    headers: { 'Authorization': `token ${token}` }
+                    headers: { 'Authorization': `token ${token}`, 'Cache-Control': 'no-cache' }
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    // 解码 Base64 并填入 textarea
-                    const decodedContent = decodeURIComponent(escape(atob(data.content)));
-                    document.getElementById('content').value = decodedContent;
-                    alert('📂 内容已找回，请修改。');
+                    const decoded = decodeURIComponent(escape(atob(data.content)));
+                    document.getElementById('content').value = decoded;
+                    alert('📂 文件已找回，现在可以编辑了。');
                 } else {
-                    alert('未找到该文件，请确认文件名和 Token 是否正确。');
+                    alert('未找到文件！请检查用户名、文件名和 Token 权限。');
                 }
-            } catch (e) {
-                alert('读取出错，请检查网络');
-            }
+            } catch (e) { alert('读取失败，请检查网络'); }
         }
 
-        // --- 功能 2：保存/更新文件 ---
+        // --- 功能 2：保存并生成链接 ---
         async function saveToCloud() {
+            const user = document.getElementById('ghUser').value.trim();
             const token = document.getElementById('ghToken').value.trim();
             const id = document.getElementById('filename').value.trim();
             const content = document.getElementById('content').value.trim();
 
-            if(!token || !id || !content) return alert('Token、文件名、内容全都要填！');
+            if(!user || !token || !id || !content) return alert('所有项都要填写完整！');
 
             const base64Content = btoa(unescape(encodeURIComponent(content)));
-            const apiUrl = `https://api.github.com/repos/${repo}/contents/data/${id}.txt`;
+            const apiUrl = `https://api.github.com/repos/${user}/jk/contents/data/${id}.txt`;
 
             try {
+                // 获取 SHA 用于覆盖更新
                 const getRes = await fetch(apiUrl, {
                     headers: { 'Authorization': `token ${token}` }
                 });
-                
-                let sha = "";
-                if (getRes.ok) {
-                    const fileData = await getRes.json();
-                    sha = fileData.sha;
-                }
+                let sha = getRes.ok ? (await getRes.json()).sha : "";
 
                 const res = await fetch(apiUrl, {
                     method: 'PUT',
-                    headers: { 
-                        'Authorization': `token ${token}`, 
-                        'Content-Type': 'application/json' 
-                    },
+                    headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: `update ${id}`,
                         content: base64Content,
@@ -105,16 +97,16 @@
                 });
 
                 if(res.ok) {
-                    const fastUrl = `https://cdn.jsdelivr.net/gh/${repo}/data/${id}.txt`;
+                    // 生成 jsDelivr 加速链接
+                    const fastUrl = `https://cdn.jsdelivr.net/gh/${user}/jk/data/${id}.txt`;
                     document.getElementById('finalLink').href = fastUrl;
                     document.getElementById('finalLink').textContent = fastUrl;
-                    alert('🎉 保存成功！');
+                    alert('🎉 保存成功！链接已生成。');
                 } else {
-                    alert('失败：请检查 Token 权限');
+                    const errorJson = await res.json();
+                    alert('失败：' + errorJson.message);
                 }
-            } catch (e) {
-                alert('网络波动，请检查网络');
-            }
+            } catch (e) { alert('保存出错'); }
         }
     </script>
 </body>
