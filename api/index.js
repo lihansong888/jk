@@ -1,21 +1,26 @@
-// 极简后端逻辑
-let storage = {}; // 临时存放在内存中
+let storage = {}; 
 
 export default function handler(req, res) {
-    const { id } = req.query;
+    const { id, password } = req.query;
 
-    // 如果是 POST，就是存数据
     if (req.method === 'POST') {
-        const { id, content } = req.body;
-        storage[id] = content;
+        const { id, content, password: newPassword } = req.body;
+        // 如果已存在且密码不对，禁止覆盖
+        if (storage[id] && storage[id].password !== newPassword) {
+            return res.status(403).send('密码错误');
+        }
+        storage[id] = { content, password: newPassword };
         return res.status(200).json({ success: true });
     }
 
-    // 如果是 GET，就是取数据
     if (id && storage[id]) {
+        // 读取时校验密码
+        if (password && storage[id].password !== password) {
+            return res.status(403).send('密码不正确');
+        }
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        return res.status(200).send(storage[id]);
+        return res.status(200).send(storage[id].content);
     }
 
-    res.status(404).send('未找到内容或已过期');
+    res.status(404).send('未找到内容');
 }
