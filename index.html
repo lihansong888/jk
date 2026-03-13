@@ -2,96 +2,37 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>在线😶‍🌫️隐身接口🫥生成工具</title>
+    <title>接口生成器</title>
     <style>
-        p { font-size: 13px; color: #666; }
-        body {font-family:"Microsoft YaHei"; font-weight: 300; margin: 2px;background-color: #eee; }
-        button { font-size: 16px; padding: 2px 5px;background-color: #000; color: #fff;border: none; border-radius: 3px; cursor: pointer;}
-        textarea {opacity: 0.8; font-size:11px; width:96%;}
+        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+        textarea { width: 100%; height: 150px; margin-bottom: 10px; }
+        input { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #000; color: #fff; border: none; cursor: pointer; }
     </style>
 </head>
-<body><br>
-    <h2>🦍<u>接口隐身</u></h2>
-    <p>🐻‍❄️<u>直播</u> 源和 <u>点播</u> 源都可以一键<b>隐身</b>！</p>
-
-    <div style="margin-bottom: 10px;">  
-        <label><input type="radio" name="formMode" value="txt" checked onclick="toggleMode('txt')"> 文本模式</label>
-        <label><input type="radio" name="formMode" value="upload" onclick="toggleMode('upload')"> 上传文件</label>
-    </div>
-
-    <div id="uploadSection" style="display: none;">
-        <br>上传文件：<br>
-        <input type="file" id="file" style="font-size:16px;"><br>
-        <div id="fileInfo"></div><br>
-    </div>
-
-    <div id="txtSection">
-        <textarea id="content" rows="12" placeholder="在此粘贴接口内容..."></textarea>
-    </div>
-    
-    <br>密 码：<input type="text" id="password" style="width:150px;"> 请牢记！！
-    <br>文件名：<input type="text" id="filename" style="width:150px;">
-    <button type="button" onclick="readFile()">读取</button>
-    <button type="button" style="font-size:18px;" onclick="saveToVercel()"> 转为链接</button>
-
-    <p>可在线编辑文件，原链接不变，需输入原密码。</p>
-
-    <div id="linkDisplay" style="margin:1px 0; padding:10px; background:#fff;width:94%; word-break: break-all;">
-        链接：<a id="linkAnchor" href="#" target="_blank"></a>
-    </div>
+<body>
+    <h2>隐身接口生成</h2>
+    <textarea id="content" placeholder="粘贴你的接口内容..."></textarea>
+    <input type="text" id="filename" placeholder="存为什么文件名？(如: live)">
+    <button onclick="save()">生成并跳转</button>
 
     <script>
-        function toggleMode(mode) {
-            document.getElementById('uploadSection').style.display = mode === 'upload' ? 'block' : 'none';
-            document.getElementById('txtSection').style.display = mode === 'txt' ? 'block' : 'none';
-        }
-
-        document.getElementById('file').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = (evt) => { document.getElementById('content').value = evt.target.result; };
-                reader.readAsText(file);
-                document.getElementById('fileInfo').innerText = `已加载: ${file.name}`;
-            }
-        });
-
-        async function saveToVercel() {
+        async function save() {
             const content = document.getElementById('content').value;
-            const filename = document.getElementById('filename').value;
-            const password = document.getElementById('password').value;
-
-            if(!content || !filename || !password) { alert('请填完整内容、文件名和密码！'); return; }
+            const id = document.getElementById('filename').value;
+            if(!content || !id) return alert('全填上再点');
 
             const res = await fetch('/api/index', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ filename, content, password })
+                body: JSON.stringify({ id, content })
             });
 
-            if (res.ok) {
-                const shareLink = window.location.origin + '/api/index?id=' + filename;
-                document.getElementById('linkAnchor').href = shareLink;
-                document.getElementById('linkAnchor').textContent = shareLink;
-                alert('生成成功！全网可用');
+            if(res.ok) {
+                // 生成后直接带你去那个地址看看
+                window.location.href = `/api/index?id=${id}`;
             } else {
-                alert('保存失败，请检查网络');
-            }
-        }
-
-        async function readFile() {
-            const filename = document.getElementById('filename').value;
-            const password = document.getElementById('password').value;
-            if(!filename || !password) { alert('请填写文件名和密码'); return; }
-
-            const res = await fetch(`/api/index?id=${filename}&pwd=${password}`);
-            if (res.ok) {
-                document.getElementById('content').value = await res.text();
-                alert('读取成功！');
-            } else {
-                const err = await res.text();
-                alert('读取失败: ' + err);
+                alert('保存失败，请刷新重试');
             }
         }
     </script>
