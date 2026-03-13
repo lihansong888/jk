@@ -37,8 +37,6 @@
     </div>
     
     <p>💡 提示：输入已有文件名可直接更新内容，链接保持不变。</p>
-    <br>
-    「<a href="https://link3.cc/zoto">接口工具</a>」 「<a href="http://dodo.3d.tc/zb.php">直播成图</a>」 <a href="https://link3.cc/zoto">🐷</a>
 
     <script>
         async function saveToCloud() {
@@ -53,7 +51,7 @@
             const apiUrl = `https://api.github.com/repos/${repo}/contents/data/${id}.txt`;
 
             try {
-                // 1. 先尝试获取文件，为了拿到更新必须的 SHA 码
+                // 1. 尝试获取文件 SHA
                 const getRes = await fetch(apiUrl, {
                     headers: { 'Authorization': `token ${token}` }
                 });
@@ -64,7 +62,7 @@
                     sha = fileData.sha;
                 }
 
-                // 2. 写入/更新文件
+                // 2. 写入或更新文件
                 const res = await fetch(apiUrl, {
                     method: 'PUT',
                     headers: { 
@@ -72,7 +70,7 @@
                         'Content-Type': 'application/json' 
                     },
                     body: JSON.stringify({
-                        message: `update ${id} via web`,
+                        message: `update ${id}`,
                         content: base64Content,
                         sha: sha || undefined
                     })
@@ -83,9 +81,9 @@
                     const fastUrl = `https://cdn.jsdelivr.net/gh/${repo}/data/${id}.txt`;
                     document.getElementById('finalLink').href = fastUrl;
                     document.getElementById('finalLink').textContent = fastUrl;
-                    alert('🎉 全线通车！数据已同步云端，链接国内直连。');
+                    alert('🎉 生成成功！');
                 } else {
-                    alert('失败：请检查 Token 权限是否勾选了 repo 权限');
+                    alert('失败：请检查 Token 权限');
                 }
             } catch (e) {
                 alert('网络波动，请检查网络后再试');
