@@ -2,38 +2,74 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>接口生成器</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
-        textarea { width: 100%; height: 150px; margin-bottom: 10px; }
-        input { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #000; color: #fff; border: none; cursor: pointer; }
+        p { font-size: 13px; color: #666; }
+        body {font-family:"Microsoft YaHei"; font-weight: 300; margin: 2px;background-color: #eee; }
+        button { font-size: 16px; padding: 0px 1px;background-color: #000; color: #fff;border: none; border-radius: 3px;}
+        textarea {opacity: 0.8; font-size:11px; white-space:pre; overflow:hidden;}
+        textarea:hover {  overflow: auto;}
     </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>在线😶‍🌫️隐身接口🫥生成工具</title>
 </head>
-<body>
-    <h2>隐身接口生成</h2>
-    <textarea id="content" placeholder="粘贴你的接口内容..."></textarea>
-    <input type="text" id="filename" placeholder="存为什么文件名？(如: live)">
-    <button onclick="save()">生成并跳转</button>
-
+<body><br>
+    <h2>🦍<u>接口隐身</u></h2>
+    <p>🐻‍❄️<u>直播</u> 源和   <u>点播</u> 源都可以一键<b>隐身</b>！</p>
+    <div style="margin-bottom: 10px;">  
+        <label><input type="radio" name="formMode" value="txt" checked onclick="toggleMode('txt')"> 文本模式</label>
+        <label><input type="radio" name="formMode" value="upload" onclick="toggleMode('upload')"> 上传文件</label>
+    </div>
+    <div id="uploadSection" style="display: none;">
+        <br><br>上传文件：<br><br>
+        <input type="file" id="file" style="font-size:16px;"><br>
+        <div id="fileInfo"></div><br><br>
+    </div>
+    <div id="txtSection">
+        <textarea id="content" rows="12" cols="44" style="width:96%;"></textarea>
+    </div>
+    <br>密 码：<input type="text" id="password" style="width:150px;"> 请牢记！！
+    <br>文件名：<input type="text" id="filename" style="width:150px;">
+    <button type="button" onclick="readFile()">读取</button>
+    <button type="button" style="font-size:18px;padding:0px;" onclick="saveFile()"> 转为链接</button>
+    <p>可在线编辑文件，原链接不变，需输入原密码。</p>
+    <div id="linkDisplay" style="margin:1px 0; padding:1px; background:#fff;width:98%;">
+        链接：<span id="loadingMsg" style="display: none; color: red;">正在处理中...</span>    
+        <a id="linkAnchor" href="" target="_blank"></a>
+    </div>
+    <br><br>゜
+    「<a href="https://link3.cc/zoto">接口工具</a>」 「<a href="http://dodo.3d.tc/zb.php">直播成图</a>」 「<a href="http://mm.gt.tc/">转换M3U</a>」 <a href="https://link3.cc/zoto">🐷</a>
     <script>
-        async function save() {
+        function toggleMode(mode) {
+            document.getElementById('uploadSection').style.display = mode === 'upload' ? 'block' : 'none';
+            document.getElementById('txtSection').style.display = mode === 'txt' ? 'block' : 'none';
+        }
+        async function saveFile() {
             const content = document.getElementById('content').value;
-            const id = document.getElementById('filename').value;
-            if(!content || !id) return alert('全填上再点');
-
+            const filename = document.getElementById('filename').value;
+            const password = document.getElementById('password').value;
+            if(!content || !filename) return alert('请填写完整');
+            document.getElementById('loadingMsg').style.display = 'inline';
             const res = await fetch('/api/index', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, content })
+                body: JSON.stringify({ id: filename, content, password })
             });
-
+            document.getElementById('loadingMsg').style.display = 'none';
             if(res.ok) {
-                // 生成后直接带你去那个地址看看
-                window.location.href = `/api/index?id=${id}`;
-            } else {
-                alert('保存失败，请刷新重试');
-            }
+                const url = `${window.location.origin}/api/index?id=${filename}`;
+                document.getElementById('linkAnchor').href = url;
+                document.getElementById('linkAnchor').textContent = url;
+            } else { alert('保存失败'); }
+        }
+        async function readFile() {
+            const filename = document.getElementById('filename').value;
+            const password = document.getElementById('password').value;
+            document.getElementById('loadingMsg').style.display = 'inline';
+            const res = await fetch(`/api/index?id=${filename}&password=${password}`);
+            document.getElementById('loadingMsg').style.display = 'none';
+            if (res.ok) {
+                document.getElementById('content').value = await res.text();
+            } else { alert('读取失败，密码错误或文件不存在'); }
         }
     </script>
 </body>
