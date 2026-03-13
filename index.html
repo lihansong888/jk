@@ -2,74 +2,94 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>在线😶‍🌫️隐身接口🫥生成工具</title>
     <style>
         p { font-size: 13px; color: #666; }
         body {font-family:"Microsoft YaHei"; font-weight: 300; margin: 2px;background-color: #eee; }
-        button { font-size: 16px; padding: 0px 1px;background-color: #000; color: #fff;border: none; border-radius: 3px;}
-        textarea {opacity: 0.8; font-size:11px; white-space:pre; overflow:hidden;}
-        textarea:hover {  overflow: auto;}
+        button { font-size: 16px; padding: 4px 10px; background-color: #000; color: #fff; border: none; border-radius: 3px; cursor: pointer; margin-top: 5px;}
+        textarea { opacity: 0.8; font-size:11px; width: 96%; height: 200px; border: 1px solid #ccc; display: block; margin-bottom: 5px;}
+        input { border: 1px solid #ccc; padding: 4px; width: 160px; margin-bottom: 5px;}
+        #linkArea { margin: 10px 0; padding: 10px; background: #fff; width: 94%; min-height: 40px; word-break: break-all; border: 1px dashed #000; }
+        a { color: blue; text-decoration: none; }
     </style>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>在线😶‍🌫️隐身接口🫥生成工具</title>
 </head>
 <body><br>
     <h2>🦍<u>接口隐身</u></h2>
-    <p>🐻‍❄️<u>直播</u> 源和   <u>点播</u> 源都可以一键<b>隐身</b>！</p>
-    <div style="margin-bottom: 10px;">  
-        <label><input type="radio" name="formMode" value="txt" checked onclick="toggleMode('txt')"> 文本模式</label>
-        <label><input type="radio" name="formMode" value="upload" onclick="toggleMode('upload')"> 上传文件</label>
+    <p>🐻‍❄️<u>直播</u> 源和 <u>点播</u> 源都可以一键<b>隐身</b>！</p>
+
+    <textarea id="content" placeholder="在此粘贴你的接口内容..."></textarea>
+    
+    <div>
+        密 码 (Token)：<br>
+        <input type="password" id="ghToken" placeholder="GitHub Token">
     </div>
-    <div id="uploadSection" style="display: none;">
-        <br><br>上传文件：<br><br>
-        <input type="file" id="file" style="font-size:16px;"><br>
-        <div id="fileInfo"></div><br><br>
+    <div>
+        文件名：<br>
+        <input type="text" id="filename" placeholder="比如: m3u8list">
     </div>
-    <div id="txtSection">
-        <textarea id="content" rows="12" cols="44" style="width:96%;"></textarea>
+    
+    <button type="button" onclick="saveToCloud()"> 转为链接</button>
+
+    <div id="linkArea">
+        <strong>生成的链接（直连加速）：</strong><br>
+        <a id="finalLink" href="" target="_blank"></a>
     </div>
-    <br>密 码：<input type="text" id="password" style="width:150px;"> 请牢记！！
-    <br>文件名：<input type="text" id="filename" style="width:150px;">
-    <button type="button" onclick="readFile()">读取</button>
-    <button type="button" style="font-size:18px;padding:0px;" onclick="saveFile()"> 转为链接</button>
-    <p>可在线编辑文件，原链接不变，需输入原密码。</p>
-    <div id="linkDisplay" style="margin:1px 0; padding:1px; background:#fff;width:98%;">
-        链接：<span id="loadingMsg" style="display: none; color: red;">正在处理中...</span>    
-        <a id="linkAnchor" href="" target="_blank"></a>
-    </div>
-    <br><br>゜
-    「<a href="https://link3.cc/zoto">接口工具</a>」 「<a href="http://dodo.3d.tc/zb.php">直播成图</a>」 「<a href="http://mm.gt.tc/">转换M3U</a>」 <a href="https://link3.cc/zoto">🐷</a>
+    
+    <p>💡 提示：输入已有文件名可直接更新内容，链接保持不变。</p>
+    <br>
+    「<a href="https://link3.cc/zoto">接口工具</a>」 「<a href="http://dodo.3d.tc/zb.php">直播成图</a>」 <a href="https://link3.cc/zoto">🐷</a>
+
     <script>
-        function toggleMode(mode) {
-            document.getElementById('uploadSection').style.display = mode === 'upload' ? 'block' : 'none';
-            document.getElementById('txtSection').style.display = mode === 'txt' ? 'block' : 'none';
-        }
-        async function saveFile() {
+        async function saveToCloud() {
+            const token = document.getElementById('ghToken').value;
+            const id = document.getElementById('filename').value;
             const content = document.getElementById('content').value;
-            const filename = document.getElementById('filename').value;
-            const password = document.getElementById('password').value;
-            if(!content || !filename) return alert('请填写完整');
-            document.getElementById('loadingMsg').style.display = 'inline';
-            const res = await fetch('/api/index', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: filename, content, password })
-            });
-            document.getElementById('loadingMsg').style.display = 'none';
-            if(res.ok) {
-                const url = `${window.location.origin}/api/index?id=${filename}`;
-                document.getElementById('linkAnchor').href = url;
-                document.getElementById('linkAnchor').textContent = url;
-            } else { alert('保存失败'); }
-        }
-        async function readFile() {
-            const filename = document.getElementById('filename').value;
-            const password = document.getElementById('password').value;
-            document.getElementById('loadingMsg').style.display = 'inline';
-            const res = await fetch(`/api/index?id=${filename}&password=${password}`);
-            document.getElementById('loadingMsg').style.display = 'none';
-            if (res.ok) {
-                document.getElementById('content').value = await res.text();
-            } else { alert('读取失败，密码错误或文件不存在'); }
+            const repo = "lihansong888/jk"; 
+
+            if(!token || !id || !content) return alert('Token、文件名、内容全都要填！');
+
+            const base64Content = btoa(unescape(encodeURIComponent(content)));
+            const apiUrl = `https://api.github.com/repos/${repo}/contents/data/${id}.txt`;
+
+            try {
+                // 1. 先尝试获取文件，为了拿到更新必须的 SHA 码
+                const getRes = await fetch(apiUrl, {
+                    headers: { 'Authorization': `token ${token}` }
+                });
+                
+                let sha = "";
+                if (getRes.ok) {
+                    const fileData = await getRes.json();
+                    sha = fileData.sha;
+                }
+
+                // 2. 写入/更新文件
+                const res = await fetch(apiUrl, {
+                    method: 'PUT',
+                    headers: { 
+                        'Authorization': `token ${token}`, 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({
+                        message: `update ${id} via web`,
+                        content: base64Content,
+                        sha: sha || undefined
+                    })
+                });
+
+                if(res.ok) {
+                    // 3. 生成 jsDelivr 直连加速地址
+                    const fastUrl = `https://cdn.jsdelivr.net/gh/${repo}/data/${id}.txt`;
+                    document.getElementById('finalLink').href = fastUrl;
+                    document.getElementById('finalLink').textContent = fastUrl;
+                    alert('🎉 全线通车！数据已同步云端，链接国内直连。');
+                } else {
+                    alert('失败：请检查 Token 权限是否勾选了 repo 权限');
+                }
+            } catch (e) {
+                alert('网络波动，请检查网络后再试');
+            }
         }
     </script>
 </body>
