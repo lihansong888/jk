@@ -2,139 +2,68 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>在线😶‍🌫️隐身接口🫥生成工具</title>
     <style>
         p { font-size: 13px; color: #666; }
         body {font-family:"Microsoft YaHei"; font-weight: 300; margin: 2px;background-color: #eee; }
-        button { font-size: 16px; padding: 0px 1px;background-color: #000; color: #fff;border: none; border-radius: 3px;}
-        textarea {opacity: 0.8; font-size:11px; white-space:pre; overflow:hidden;}
-        textarea:hover {  overflow: auto;}
+        button { font-size: 16px; padding: 5px 10px; background-color: #000; color: #fff; border: none; border-radius: 3px; cursor: pointer;}
+        textarea { opacity: 0.8; font-size:11px; width:96%; }
     </style>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ys😶‍🌫️隐身接口🫥生成工具</title>
 </head>
-<body><br>
+<body>
+    <br>
     <h2>🦍<u>接口隐身</u></h2>
-    <p>🐻‍❄️<u>直播</u> 源和   <u>点播</u> 源都可以一键<b>隐身</b>！</p>
-
-    <div style="margin-bottom: 10px;">  
-        <label>
-            <input type="radio" name="formMode" value="txt" checked onclick="toggleMode('txt')"> 文本模式
-        </label>
-        <label>
-            <input type="radio" name="formMode" value="upload" onclick="toggleMode('upload')"> 上传文件
-        </label>
-    </div>
-
-    <div id="uploadSection" style="display: none;">
-        <br><br>上传文件：<br><br>
-        <input type="file" name="file" id="file" style="font-size:16px;"><br>
-        <div id="fileInfo"></div><br><br>
-    </div>
+    <p>🐻‍❄️<u>直播</u> 源和 <u>点播</u> 源一键<b>隐身</b>！</p>
 
     <div id="txtSection">
-        <textarea id="content" rows="12" cols="44" style="width:96%;"></textarea>
+        <textarea id="content" rows="12" placeholder="在此粘贴接口内容..."></textarea>
     </div>
-    
-    <br>密 码：
-    <input type="text" id="password" value="" style="width:150px;"> 请牢记！！
-    <br>文件名：
-    <input type="text" id="filename" value="" style="width:150px;" maxlength="4">
-    <br>接口标识：
-    <input type="text" id="token" value="" style="width:150px;" placeholder="自定义一个无意义标识（如abc123）">
-    
-    <button onclick="readFile()">读取</button>
-    <button onclick="saveFile()"> 转为链接</button>
+    <br>
+    密 码：<input type="text" id="password" style="width:150px;"> 
+    <br>
+    文件名：<input type="text" id="filename" style="width:150px;">
+    <br><br>
+    <button type="button" onclick="saveToVercel()"> 转为链接 </button>
 
-    <p>可在线编辑文件，原链接不变，需输入原密码。</p>
-
-    <div style="margin:1px 0; padding:1px; background:#fff;width:98%;">
-        链接：<span id="linkText"></span>
+    <div id="linkDisplay" style="margin-top:20px; padding:10px; background:#fff; width:94%; word-break: break-all;">
+        生成的隐身链接：<br>
+        <a id="linkAnchor" href="#" target="_blank"></a>
     </div>
 
     <script>
-        const STORAGE_KEY = "my_api_files";
-        const TOKEN_MAP_KEY = "my_api_token_map";
+        // Vercel 专用逻辑：利用 localStorage 先实现单机可用，API 稍后跟进
+        function saveToVercel() {
+            const content = document.getElementById('content').value;
+            const filename = document.getElementById('filename').value;
+            const password = document.getElementById('password').value;
 
-        function toggleMode(mode) {
-            document.getElementById('uploadSection').style.display = mode === 'upload' ? 'block' : 'none';
-            document.getElementById('txtSection').style.display = mode === 'txt' ? 'block' : 'none';
+            if(!content || !filename) { alert('内容和文件名不能为空'); return; }
+
+            // 这里暂时先存本地，等 API 部署好后把 fetch 放这
+            const data = { content, password };
+            localStorage.setItem(filename, JSON.stringify(data));
+
+            const shareLink = window.location.origin + window.location.pathname + '?id=' + filename;
+            document.getElementById('linkAnchor').href = shareLink;
+            document.getElementById('linkAnchor').textContent = shareLink;
+            alert('生成成功！(当前为测试模式)');
         }
 
-        document.getElementById('file').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = evt => {
-                    document.getElementById('content').value = evt.target.result;
-                };
-                reader.readAsText(file);
-                document.getElementById('fileInfo').innerText = `已加载：${file.name}`;
-            }
-        });
-
-        function saveFile() {
-            const pwd = document.getElementById('password').value.trim();
-            const fname = document.getElementById('filename').value.trim();
-            const token = document.getElementById('token').value.trim();
-            const content = document.getElementById('content').value.trim();
-
-            if(!pwd || !fname || !token || !content) {
-                alert('请填完整！');
-                return;
-            }
-
-            // 保存文件内容
-            const allFiles = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            allFiles[fname] = { pwd, content };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(allFiles));
-
-            // 保存 token → 文件名 映射
-            const allTokens = JSON.parse(localStorage.getItem(TOKEN_MAP_KEY) || '{}');
-            allTokens[token] = fname;
-            localStorage.setItem(TOKEN_MAP_KEY, JSON.stringify(allTokens));
-
-            const host = location.origin;
-            const link = `${host}?token=${token}`;
-            document.getElementById('linkText').innerText = link;
-            alert('保存成功！链接已隐藏敏感信息！');
-        }
-
-        function readFile() {
-            const pwd = document.getElementById('password').value.trim();
-            const fname = document.getElementById('filename').value.trim();
-            if(!pwd || !fname) { alert('填密码+文件名'); return; }
-
-            const allFiles = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            const item = allFiles[fname];
-            if(item && item.pwd === pwd) {
-                document.getElementById('content').value = item.content;
-                alert('读取成功！');
-            } else {
-                alert('密码或文件名错误');
+        // 自动解析 URL 参数
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if(id) {
+                const stored = localStorage.getItem(id);
+                if(stored) {
+                    const data = JSON.parse(stored);
+                    document.body.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word;">${data.content}</pre>`;
+                } else {
+                    document.body.innerHTML = "接口已隐身，未找到内容。";
+                }
             }
         }
-
-        // 接口解析：通过 token 找到文件
-        (function autoApi() {
-            const params = new URLSearchParams(location.search);
-            const token = params.get('token');
-            if(!token) return;
-
-            const allTokens = JSON.parse(localStorage.getItem(TOKEN_MAP_KEY) || '{}');
-            const fname = allTokens[token];
-            if(!fname) {
-                document.body.innerHTML = "✅ 接口已隐身，浏览器打开仅显示说明";
-                return;
-            }
-
-            const allFiles = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            const item = allFiles[fname];
-            if(item) {
-                document.body.innerHTML = item.content;
-            } else {
-                document.body.innerHTML = "✅ 接口已隐身，浏览器打开仅显示说明";
-            }
-        })();
     </script>
 </body>
 </html>
